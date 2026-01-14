@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MoviesResponse } from '@/app/types/movie';
 
 const TMDB_API_BASE = 'https://api.themoviedb.org/3';
-const TMDB_TOKEN = process.env.NEXT_PUBLIC_TMDB_ACCESS_TOKEN;
+const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+
+interface TMDBMovie {
+  id: number;
+  title: string;
+  release_date?: string;
+  overview: string;
+  poster_path: string | null;
+  vote_average: number;
+}
+
+interface TMDBSearchResponse {
+  page: number;
+  total_pages: number;
+  total_results: number;
+  results: TMDBMovie[];
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,10 +25,11 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q');
     const page = searchParams.get('page') || '1';
 
-    // Validate token
-    if (!TMDB_TOKEN) {
+    // Validate API key
+    if (!TMDB_API_KEY) {
+      console.error('TMDB API key not configured');
       return NextResponse.json(
-        { error: 'API configuration error', message: 'TMDB token not configured' },
+        { error: 'API configuration error', message: 'TMDB API key not configured' },
         { status: 500 }
       );
     }
@@ -36,13 +52,12 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(
-      `${TMDB_API_BASE}/search/movie?query=${encodeURIComponent(query)}&page=${pageNum}&language=en-US&include_adult=false`,
+      `${TMDB_API_BASE}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=${pageNum}&language=en-US&include_adult=false`,
       {
         headers: {
-          'Authorization': `Bearer ${TMDB_TOKEN}`,
           'Accept': 'application/json',
         },
-        next: { revalidate: 60 }, // Cache for 60 seconds per requirements
+        next: { revalidate: 60 },
       }
     );
 
@@ -54,15 +69,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (!response.ok) {
+      const errorData = await response.text();
+      console.error('TMDB API error:', response.status, errorData);
       return NextResponse.json(
         { error: 'TMDB API error', message: `HTTP ${response.status}` },
         { status: response.status }
       );
     }
 
-    const data: MoviesResponse = await response.json();
+    const data: TMDBSearchResponse = await response.json();
 
-    // Return normalized response per spec
     return NextResponse.json({
       page: data.page,
       total_pages: data.total_pages,
@@ -70,7 +86,7 @@ export async function GET(request: NextRequest) {
       results: data.results.map((movie) => ({
         id: movie.id,
         title: movie.title,
-        release_date: movie.release_date,
+        release_date: movie.release_date || '',
         overview: movie.overview,
         poster_url: movie.poster_path 
           ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`

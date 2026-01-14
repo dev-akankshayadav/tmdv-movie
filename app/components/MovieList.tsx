@@ -26,13 +26,13 @@ interface SearchResponse {
 
 export async function MovieList({ query, page }: MovieListProps) {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
     const response = await fetch(
-      `/api/movies/search?q=${encodeURIComponent(query)}&page=${page}`,
+      `${baseUrl}/api/movies/search?q=${encodeURIComponent(query)}&page=${page}`,
       {
         next: { revalidate: 60 },
       }
     );
-
     if (response.status === 429) {
       return (
         <Alert
