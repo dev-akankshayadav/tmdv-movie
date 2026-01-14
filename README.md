@@ -200,6 +200,11 @@ netlify deploy --prod --dir=.next
 Add environment variable in Netlify UI:
 - `NEXT_PUBLIC_TMDB_ACCESS_TOKEN`: your_token_here
 
+Add environment variable in env.local:
+- `NEXT_PUBLIC_TMDB_ACCESS_TOKEN`: your_tmdb_access_token_here
+- `NEXT_PUBLIC_TMDB_API_KEY`: your_tmdb_api_key_here
+- `NEXT_PUBLIC_API_URL`: your_local_api_url_here
+
 ## Security
 
 ### ✅ Protection Measures
