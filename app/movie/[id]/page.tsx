@@ -12,7 +12,8 @@ export async function generateMetadata({ params }: MoviePageProps) {
   const { id } = await params;
 
   try {
-    const response = await fetch(`/api/movies/${id}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/movies/${id}`, {
       next: { revalidate: 60 },
     });
 

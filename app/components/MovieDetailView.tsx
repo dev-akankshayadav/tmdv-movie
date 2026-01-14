@@ -14,7 +14,8 @@ interface MovieDetailViewProps {
 
 export async function MovieDetailView({ movieId }: MovieDetailViewProps) {
   try {
-    const response = await fetch(`/api/movies/${movieId}`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/movies/${movieId}`, {
       next: { revalidate: 60 },
     });
 
